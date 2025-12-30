@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Limbo Chat</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 15px;
+      word-wrap: break-word;
+    }
+    .sent-me {
+      background: #dcf8c6;
+      align-self: flex-end;
+    }
+    .sent-other {
+      background: #e0e0ff;
+      align-self: flex-start;
+    }
+    #inputArea {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="messages"></div>
+
+<div id="inputArea">
+  <input id="messageInput" placeholder="Type a message…" />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_sFl5IAEVgCh1HATSgGigFhWwdfsWU5s",
+    authDomain: "limbo-61aa1.firebaseapp.com",
+    databaseURL: "https://limbo-61aa1-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "limbo-61aa1",
+    storageBucket: "limbo-61aa1.appspot.com",
+    messagingSenderId: "336340515566",
+    appId: "1:336340515566:web:ce1d1c0b910a758b3311ff"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Get room ID from URL
+  const params = new URLSearchParams(window.location.search);
+  const roomId = params.get("room");
+
+  if (!roomId) {
+    alert("No chat room specified.");
+    throw new Error("Missing room ID");
+  }
+
+  const chatRef = db.ref(`chats/${roomId}`);
+
+  // Device identity
+  if (!localStorage.getItem("limboDeviceId")) {
+    localStorage.setItem("limboDeviceId", crypto.randomUUID());
+  }
+  const deviceId = localStorage.getItem("limboDeviceId");
+
+  const messagesDiv = document.getElementById("messages");
+  const input = document.getElementById("messageInput");
+
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    chatRef.push({
+      text,
+      sender: deviceId,
+      timestamp: Date.now()
+    });
+
+    input.value = "";
+  }
+
+  chatRef.on("child_added", snapshot => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.classList.add("message");
+    div.classList.add(msg.sender === deviceId ? "sent-me" : "sent-other");
+    div.textContent = msg.text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+</script>
+
+</body>
+</html>
