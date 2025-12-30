@@ -26,11 +26,14 @@
       padding: 10px;
       margin: 5px;
       border-radius: 15px;
+      word-wrap: break-word;
+    }
+    .sent-me {
       background: #dcf8c6;
       align-self: flex-end;
     }
-    .message.received {
-      background: #fff;
+    .sent-other {
+      background: #e0e0ff;
       align-self: flex-start;
     }
     #inputArea {
@@ -80,34 +83,35 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  // Generate or retrieve device ID
+  if (!localStorage.getItem('limboDeviceId')) {
+    localStorage.setItem('limboDeviceId', crypto.randomUUID());
+  }
+  const deviceId = localStorage.getItem('limboDeviceId');
+
   const messagesDiv = document.getElementById('messages');
   const input = document.getElementById('messageInput');
 
   function sendMessage() {
     const text = input.value.trim();
     if (text) {
-      db.ref('messages').push({ text, timestamp: Date.now() });
+      db.ref('messages').push({ text, timestamp: Date.now(), sender: deviceId });
       input.value = '';
     }
   }
 
   db.ref('messages').on('child_added', (snapshot) => {
     const message = snapshot.val();
-    displayMessage(message.text, message.timestamp);
+    displayMessage(message.text, message.timestamp, message.sender);
   });
 
-  let lastTimestamp = 0;
-
-  function displayMessage(text, timestamp) {
+  function displayMessage(text, timestamp, sender) {
     const div = document.createElement('div');
     div.classList.add('message');
-    if (timestamp < lastTimestamp) {
-      div.classList.add('received');
-    }
+    div.classList.add(sender === deviceId ? 'sent-me' : 'sent-other');
     div.innerText = text;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    lastTimestamp = timestamp;
   }
 </script>
 
