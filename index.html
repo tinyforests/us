@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Limbo</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+    }
+    body {
       display: flex;
       flex-direction: column;
-      background: #f1f1f1;
     }
     #messages {
       flex: 1;
@@ -20,6 +22,7 @@
       padding: 10px;
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
     }
     .message {
       max-width: 70%;
@@ -37,9 +40,13 @@
       align-self: flex-start;
     }
     #inputArea {
+      position: sticky;
+      bottom: 0;
       display: flex;
       padding: 10px;
       background: #fff;
+      z-index: 10;
+      box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
     }
     #inputArea input {
       flex: 1;
@@ -83,7 +90,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Generate or retrieve device ID
   if (!localStorage.getItem('limboDeviceId')) {
     localStorage.setItem('limboDeviceId', crypto.randomUUID());
   }
